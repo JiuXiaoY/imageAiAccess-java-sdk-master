@@ -31,15 +31,23 @@ public class SparkWebSocket extends WebSocketListener {
     public String NewQuestion;
     CompletableFuture<String> future;
 
+    public Boolean withPrompt;
+
     // 构造答案
     StringBuilder totalAnswerBuilder = new StringBuilder();
 
-    public SparkWebSocket(String appid, String userId, Boolean wsCloseFlag, String NewQuestion, CompletableFuture<String> future) {
+    public SparkWebSocket(String appid,
+                          String userId,
+                          Boolean wsCloseFlag,
+                          String NewQuestion,
+                          CompletableFuture<String> future,
+                          Boolean withPrompt) {
         this.appid = appid;
         this.userId = userId;
         this.wsCloseFlag = wsCloseFlag;
         this.NewQuestion = NewQuestion;
         this.future = future;
+        this.withPrompt = withPrompt;
     }
 
     public static final Gson gson = new Gson();
@@ -121,10 +129,12 @@ public class SparkWebSocket extends WebSocketListener {
                 JSONArray text = new JSONArray();
 
                 // 背景设定
-                RoleContent roleContentBg = new RoleContent();
-                roleContentBg.role = "system";
-                roleContentBg.content = RoleSettingConstant.GEN_CHART_SPARK;
-                text.add(roleContentBg);
+                if (withPrompt) {
+                    RoleContent roleContentBg = new RoleContent();
+                    roleContentBg.role = "system";
+                    roleContentBg.content = RoleSettingConstant.GEN_CHART_SPARK;
+                    text.add(roleContentBg);
+                }
 
                 // 新问题
                 RoleContent roleContent = new RoleContent();

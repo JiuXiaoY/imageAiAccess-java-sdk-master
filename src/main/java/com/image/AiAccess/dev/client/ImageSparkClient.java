@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
  * @version 1.0
  * @since 2024/6/10
  */
+@SuppressWarnings("all")
 public class ImageSparkClient {
     // 模型参数
     public static final String hostUrl = "https://spark-api.xf-yun.com/v3.5/chat";
@@ -33,12 +34,46 @@ public class ImageSparkClient {
         this.apiKey = apiKey;
     }
 
+    /**
+     * 带有背景设定的
+     *
+     * @param sparkChatRequest 请求参数
+     * @return 返回结果
+     * @throws ExecutionException 异常
+     * @throws InterruptedException 异常
+     */
     public BaseResponse<SparkChatResponse> doChat(SparkChatRequest sparkChatRequest) throws ExecutionException, InterruptedException {
         // 获取到用户 id 以及问题
         String question = sparkChatRequest.getQuestion();
         String userId = sparkChatRequest.getUserId();
         // sparkWebSocket
-        SparkWebSocket sparkWebSocket = new SparkWebSocket(appid, userId, false, question, future);
+        SparkWebSocket sparkWebSocket = new SparkWebSocket(appid, userId, false, question, future, true);
+        // 构建鉴权url
+        String authUrl = AuthUrlUtils.getAuthUrl(hostUrl, apiKey, apiSecret);
+        OkHttpClient client = new OkHttpClient.Builder().build();
+        String url = authUrl.toString().replace("http://", "ws://").replace("https://", "wss://");
+        Request request = new Request.Builder().url(url).build();
+        // 建立 webSocket 连接
+        WebSocket webSocket = client.newWebSocket(request, sparkWebSocket);
+        // 确保在webSocket连接关闭时在执行以下语句
+        String result = future.get();
+        return new BaseResponse<SparkChatResponse>(200, new SparkChatResponse(result), "ok");
+    }
+
+    /**
+     * 不带有背景设定的
+     *
+     * @param sparkChatRequest 请求参数
+     * @return 返回结果
+     * @throws ExecutionException 异常
+     * @throws InterruptedException 异常
+     */
+    public BaseResponse<SparkChatResponse> doChatWithNoPrompt(SparkChatRequest sparkChatRequest) throws ExecutionException, InterruptedException {
+        // 获取到用户 id 以及问题
+        String question = sparkChatRequest.getQuestion();
+        String userId = sparkChatRequest.getUserId();
+        // sparkWebSocket
+        SparkWebSocket sparkWebSocket = new SparkWebSocket(appid, userId, false, question, future, false);
         // 构建鉴权url
         String authUrl = AuthUrlUtils.getAuthUrl(hostUrl, apiKey, apiSecret);
         OkHttpClient client = new OkHttpClient.Builder().build();
@@ -65,7 +100,7 @@ public class ImageSparkClient {
                 "2号,40\n" +
                 "3号,80";
         SparkChatRequest sparkChatRequest = new SparkChatRequest(userId, NewQuestion);
-        BaseResponse<SparkChatResponse> sparkChatResponse = imageSparkClient.doChat(sparkChatRequest);
+        BaseResponse<SparkChatResponse> sparkChatResponse = imageSparkClient.doChatWithNoPrompt(sparkChatRequest);
         System.out.println(sparkChatResponse.getData());
     }
 }

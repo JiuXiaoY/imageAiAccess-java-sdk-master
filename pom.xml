@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.imagegem</groupId>
     <artifactId>imageAiAccess-java-sdk</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
     <name>imageAiAccess-java-sdk</name>
     <description>imageAiAccess-java-sdk</description>
     <properties>
